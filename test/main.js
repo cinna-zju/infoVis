@@ -2,10 +2,11 @@ var w = 1400;
 var h = 900;
 
 var page;
+var isAlign=false, btn;
 
 var table, sub0;
 var barWidth = 8;
-var spacing = 10;
+var spacing = 3;
 
 //colors
 var c1, c2, c3, grey;
@@ -33,7 +34,7 @@ function setup() {
   var mCanvas = createCanvas(w, h);
   mCanvas.parent("canvas");
   background(255);
-  frameRate(5);
+  frameRate(24);
   page = 0;
 
   choose = 0;
@@ -54,14 +55,12 @@ function setup() {
   console.log(sub0.getRowCount() + " total rows in sub0");
   console.log(sub0.getColumnCount() + " total cols in sub0");
 
-
-  //set text
-  textSize(12);
-
-
   c1 = color(0x32, 0xd3, 0xeb);
   c2 = color(0xff, 0x7c, 0x7c);
   c3 = color(0xfe, 0xb6, 0x4d);
+  // c1 = color(0xe5, 0xf5, 0xe0);
+  // c2 = color(0xa1, 0xd9, 0x9b);
+  // c3 = color(0x31, 0xa3, 0x54);
   grey = color(0x7f, 0x7f, 0x7f);
 
 
@@ -74,8 +73,24 @@ function setup() {
     }
   }
   rec_num.push(app_num.length);
+
+  btn = createButton('Align');
+  btn.position(800, 750);
+  btn.mousePressed(() => {
+    isAlign = !isAlign;
+  })
 }
 
+function addBackground() {
+  fill('rgba(200,200,200,0.5)');
+  var x = Math.floor((mouseX - 50) / 150);
+  var y = Math.floor((mouseY - 50) / 150);
+  if (x + y * 9 < 41 && x + y * 9 >= 0) {
+    rect(50 + 150 * x, 50 + 150 * y, 150, 150);
+    
+  }
+
+}
 
 function draw() {
   clear();
@@ -84,17 +99,34 @@ function draw() {
     for (var i = 0; i < 5; i++){
       for (var j = 0; j < 9; j++){
         if (i * 9 + j < 41) {
-          drawSub(i * 9 + j, 100 + 150 * j, 100 + 150 * i);
-  
-          text('sub' + parseInt(i * 9 + j), 100+150*j, 230+150*i);
+          drawSub(i * 9 + j,  50 + 150 * j, 50 + 150 * i);
+          textSize(12);  
+          text('sub' + parseInt(i * 9 + j), 50+150*j, 180+150*i);
           
         }      
       }
-    }  
+    }
+    textSize(50);
+    text('Menu-hotkey transition', 800, 700);
+    fill(c1);
+    textSize(24);
+    rect(800, 730, 30, 30);
+    fill(c2);
+    rect(1000, 730, 30, 30);
+    fill(c3);
+    rect(1200, 730, 30, 30);
+
+    fill(0);
+    text('Menu only', 840, 750);
+    text('hotkey only', 1240, 750);
+    text('Menu&hotkey', 1040, 750);
+
+
+
+    addBackground();
   }
 
   if (page === 1) {
-    text(current_id, 100, 530);
     if (mouseX < 300 && mouseX > 0) {
       var t = Math.floor((mouseY - 300) / barWidth);
       if (t < 14 && t >= 0) {
@@ -106,7 +138,7 @@ function draw() {
         hover = -1;
       }
     }
-    //drawLineChart(subset(time, sub0_item[choose], sub0_item[choose + 1]), 500, 200);
+    drawLineChart(subset(time, sub0_item[choose], sub0_item[choose + 1]), 500, 200);
     if (current_id > 1) {
       drawSub(current_id - 1, 150, 20);    
     }
@@ -121,19 +153,29 @@ function draw() {
 }
 
 function mousePressed() {
-  var x = Math.floor((mouseX - 100) / 150);
-  var y = Math.floor((mouseY - 100) / 150);
+  var x = Math.floor((mouseX - 50) / 150);
+  var y = Math.floor((mouseY - 50) / 150);
 
-  if (x + 9 * y < 41 && page === 0) {
+  if (x + 9 * y < 41 && page === 0 && x + y * 9 >= 0) {
     page = 1;
     current_id = x + 9 * y;
     console.log(current_id);
-    barWidth = 15;
+    barWidth = 12;
+
+    btn.remove();
+    btn = createButton('Align');
+    btn.position(50, 200);
+    btn.mousePressed(() => {
+      isAlign = !isAlign;
+    })
   }
 
   if (mouseX < 50 && mouseY < 50 && page === 1) {
     page = 0;
     barWidth = 8;
+    isAlign = false;
+    btn.remove();
+
   }
 }
 
@@ -142,7 +184,7 @@ function highLight(y) {
   if (hover !== -1) {
     stroke(0);
     noFill();
-    rect(barX[y], 300 + barWidth * y, barW[y], barWidth);
+    rect(150, 300 + barWidth * y, barW[y], barWidth);
   }
 }
 
@@ -161,22 +203,16 @@ function drawSub(id, x, y) {
       fill(0);
       // text(item[i], x, y + barWidth * (t+1));
 
-      barX[t] = x - parseInt(start[i]);
-      barW[t] = app_num[i];
     } else {
       noStroke();
       fill(c1);
-      if (page === 0) {
+      if (isAlign === false) {
         rect(x, y + barWidth * t, app_num[i]/2, barWidth);
-        barX[t] = x - app_num[i];
-        barW[t] = app_num[i];
-      }
-      if (page === 1) {
-        rect(150, y + barWidth * t, -app_num[i], barWidth);
-        
-      }
 
-
+      }
+      if (isAlign === true) {
+        rect(x, y + barWidth * t, -app_num[i]/2, barWidth);
+      }
       fill(0);
       // text(item[i], x, y + barWidth * (t+1));
     }
@@ -188,7 +224,7 @@ function drawSub(id, x, y) {
 
 
 function drawGrid(num, start, end, x, y) {
-  if (page === 0) {
+  if (isAlign === false) {
     fill(c1);
     rect(x, y, start, barWidth);
   
@@ -198,7 +234,7 @@ function drawGrid(num, start, end, x, y) {
     fill(c3);
     rect(x+end, y, num-end, barWidth);
   }
-  if (page === 1) {
+  if (isAlign === true) {
     fill(c1);
     rect(x, y, -start, barWidth);
   
@@ -208,10 +244,6 @@ function drawGrid(num, start, end, x, y) {
     fill(c3);
     rect(x+end-start, y, num-end, barWidth);
   }
-
-
-
-
 }
 
 
@@ -240,24 +272,33 @@ function drawCenterSub(id, y) {
   for (var i = parseInt(rec_num[id]); i < parseInt(rec_num[id+1]); i++){
     if (start[i].toString() !== "-1" && end[i].toString() !== "-1") {
       noStroke();
-      drawGrid(parseInt(app_num[i]), parseInt(start[i]), parseInt(end[i]), 150, y + barWidth * t);
+      drawGrid(parseInt(app_num[i])/2, parseInt(start[i])/2, parseInt(end[i])/2, 150, y + barWidth * t);
       fill(0);
-      text(item[i], 150, y + barWidth * (t+1));
+      textSize(12);
+      text(item[i], 200, y + barWidth * (t+1));
 
-      barX[t] = 150 - parseInt(start[i]);
-      barW[t] = app_num[i];
+      barX[t] = 150 - parseInt(start[i])/2;
+      barW[t] = app_num[i]/2;
     } else {
       noStroke();
       fill(c1);
-      rect(150, y + barWidth * t, -app_num[i], barWidth);
-      barX[t] = 150 - app_num[i];
-      barW[t] = app_num[i];
+      if (isAlign === true) {
+        rect(150, y + barWidth * t, -app_num[i]/2, barWidth);
+      } else {
+        rect(150, y + barWidth * t, app_num[i]/2, barWidth);
+        
+      }
+      barX[t] = 150 - app_num[i]/2;
+      barW[t] = app_num[i]/2;
 
       fill(0);
-      text(item[i], 150, y + barWidth * (t+1));
+      text(item[i], 200, y + barWidth * (t+1));
     }
     t++;
   }
+
+  textSize(30);
+  text(current_id, 200, 500);
 }
 
 
