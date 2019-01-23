@@ -1,8 +1,10 @@
-var w = 1300;
+var w = 1400;
 var h = 900;
 
+var page;
+
 var table, sub0;
-var barWidth = 15;
+var barWidth = 8;
 var spacing = 10;
 
 //colors
@@ -21,19 +23,18 @@ var app_num, start, end, type, sub, item;
 var rec_num = new Array();
 var sub0_item = new Array();
 
-
-
-
 function preload() {
   table = loadTable("forSub.csv", "csv", "header");
   sub0 = loadTable("Sub0.csv", "csv", "header");
+
 }
 
 function setup() {
   var mCanvas = createCanvas(w, h);
   mCanvas.parent("canvas");
   background(255);
-  frameRate(10);
+  frameRate(5);
+  page = 0;
 
   choose = 0;
   current_id = 10;
@@ -53,8 +54,9 @@ function setup() {
   console.log(sub0.getRowCount() + " total rows in sub0");
   console.log(sub0.getColumnCount() + " total cols in sub0");
 
+
   //set text
-  textSize(15);
+  textSize(12);
 
 
   c1 = color(0x32, 0xd3, 0xeb);
@@ -77,30 +79,62 @@ function setup() {
 
 function draw() {
   clear();
-  text(current_id, 100, 530);
-  if (mouseX < 300 && mouseX > 0) {
-    var t = Math.floor((mouseY - 300) / barWidth);
-    if (t < 14 && t >= 0) {
-      if (mouseIsPressed) {
-        choose = t;
-      }
-      hover = t;
-    } else {
-      hover = -1;
-    }
-  }
-  drawLineChart(subset(time, sub0_item[choose], sub0_item[choose + 1]), 500, 200);
-  if (current_id > 1) {
-    drawBySub(current_id - 1, 20);    
-  }
-  drawCenterSub(current_id, 300);
-  if (current_id < 41) {
-    drawBySub(current_id + 1, 580);    
-  }
-  highLight(hover);
 
-
+  if (page === 0) {
+    for (var i = 0; i < 5; i++){
+      for (var j = 0; j < 9; j++){
+        if (i * 9 + j < 41) {
+          drawSub(i * 9 + j, 100 + 150 * j, 100 + 150 * i);
   
+          text('sub' + parseInt(i * 9 + j), 100+150*j, 230+150*i);
+          
+        }      
+      }
+    }  
+  }
+
+  if (page === 1) {
+    text(current_id, 100, 530);
+    if (mouseX < 300 && mouseX > 0) {
+      var t = Math.floor((mouseY - 300) / barWidth);
+      if (t < 14 && t >= 0) {
+        if (mouseIsPressed) {
+          choose = t;
+        }
+        hover = t;
+      } else {
+        hover = -1;
+      }
+    }
+    //drawLineChart(subset(time, sub0_item[choose], sub0_item[choose + 1]), 500, 200);
+    if (current_id > 1) {
+      drawSub(current_id - 1, 150, 20);    
+    }
+    drawCenterSub(current_id, 300);
+    if (current_id < 41) {
+      drawSub(current_id + 1, 150, 580);    
+    }
+    highLight(hover);
+  }
+
+
+}
+
+function mousePressed() {
+  var x = Math.floor((mouseX - 100) / 150);
+  var y = Math.floor((mouseY - 100) / 150);
+
+  if (x + 9 * y < 41 && page === 0) {
+    page = 1;
+    current_id = x + 9 * y;
+    console.log(current_id);
+    barWidth = 15;
+  }
+
+  if (mouseX < 50 && mouseY < 50 && page === 1) {
+    page = 0;
+    barWidth = 8;
+  }
 }
 
 
@@ -111,6 +145,89 @@ function highLight(y) {
     rect(barX[y], 300 + barWidth * y, barW[y], barWidth);
   }
 }
+
+function drawSub(id, x, y) {
+  id = parseInt(id);
+  var t = 0;
+
+  c1.setAlpha(255);
+  c2.setAlpha(255);
+  c3.setAlpha(255);
+  
+  for (var i = parseInt(rec_num[id]); i < parseInt(rec_num[id+1]); i++){
+    if (start[i].toString() !== "-1" && end[i].toString() !== "-1") {
+      noStroke();
+      drawGrid(parseInt(app_num[i])/2, parseInt(start[i])/2, parseInt(end[i])/2, x, y + barWidth * t);
+      fill(0);
+      // text(item[i], x, y + barWidth * (t+1));
+
+      barX[t] = x - parseInt(start[i]);
+      barW[t] = app_num[i];
+    } else {
+      noStroke();
+      fill(c1);
+      if (page === 0) {
+        rect(x, y + barWidth * t, app_num[i]/2, barWidth);
+        barX[t] = x - app_num[i];
+        barW[t] = app_num[i];
+      }
+      if (page === 1) {
+        rect(150, y + barWidth * t, -app_num[i], barWidth);
+        
+      }
+
+
+      fill(0);
+      // text(item[i], x, y + barWidth * (t+1));
+    }
+    t++;
+  }
+}
+
+
+
+
+function drawGrid(num, start, end, x, y) {
+  if (page === 0) {
+    fill(c1);
+    rect(x, y, start, barWidth);
+  
+    fill(c2);
+    rect(x+start, y, end-start, barWidth);
+  
+    fill(c3);
+    rect(x+end, y, num-end, barWidth);
+  }
+  if (page === 1) {
+    fill(c1);
+    rect(x, y, -start, barWidth);
+  
+    fill(c2);
+    rect(x, y, end-start, barWidth);
+  
+    fill(c3);
+    rect(x+end-start, y, num-end, barWidth);
+  }
+
+
+
+
+}
+
+
+
+
+function keyReleased() {
+  if (keyCode === 83 && current_id>0) {
+    current_id--;
+  }
+
+  if (keyCode === 87 && current_id<41) {
+    current_id++;
+  }
+  return false;
+}
+
 
 function drawCenterSub(id, y) {
   id = parseInt(id);
@@ -141,51 +258,6 @@ function drawCenterSub(id, y) {
     }
     t++;
   }
-}
-
-function drawBySub(id, y) {
-  id = parseInt(id);
-  var t = 0;
-
-  c1.setAlpha(128);
-  c2.setAlpha(128);
-  c3.setAlpha(128);
-
-  for (var i = parseInt(rec_num[id]); i < parseInt(rec_num[id+1]); i++){
-    if (start[i].toString() !== "-1" && end[i].toString() !== "-1") {
-      noStroke();
-      drawGrid(parseInt(app_num[i]), parseInt(start[i]), parseInt(end[i]), 150, y + barWidth * t);
-      // draw label
-      // fill(0);
-      // text(item[i], 150, y + barWidth * (t+1));
-
-    } else {
-      noStroke();
-      fill(c1);
-      rect(150, y + barWidth * t, -app_num[i], barWidth);
-
-
-      // fill(0);
-      // text(item[i], 150, y + barWidth * (t+1));
-    }
-    t++;
-  }
-}
-
-
-function drawGrid(num, start, end, x, y) {
-
-  fill(c1);
-  rect(x, y, -start, barWidth);
-
-  fill(c2);
-  rect(x, y, end-start, barWidth);
-
-  fill(c3);
-  rect(x+end-start, y, num-end, barWidth);
-
-  // console.log(start, end, num);
-
 }
 
 
@@ -242,19 +314,6 @@ function drawLineChart(data, x, y0) {
   vertex(x, y0);
   endShape(CLOSE);
 
-
-  
 }
 
-
-function keyReleased() {
-  if (keyCode === 83 && current_id>0) {
-    current_id--;
-  }
-
-  if (keyCode === 87 && current_id<41) {
-    current_id++;
-  }
-  return false;
-}
 
