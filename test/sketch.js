@@ -27,7 +27,6 @@ function setup() {
   app = table.getColumn("");
   time = table.getColumn("time_item_selected");
 
-
   c1 = color(0x60, 0xac, 0xfc);
   c2 = color(0x5b, 0xc4, 0x9f);
   c3 = color(0xfe, 0xb6, 0x4d);
